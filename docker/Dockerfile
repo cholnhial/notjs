@@ -1,33 +1,10 @@
-FROM ymonnier/sdkman-java:latest
-LABEL authors="chol"
+FROM debian:bookworm-slim
 
-# Install bash, C++ compiler and build tools using Alpine packages
-RUN apk update \
-    && apk add --no-cache \
-    bash \
-    build-base \
-    g++ \
-    gcc \
-    make \
-    cmake \
-    curl \
-    && rm -rf /var/cache/apk/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl bash zip unzip build-essential gcc g++ rustc golang ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set bash as the default shell
-SHELL ["/bin/bash", "-c"]
-
-
-# Install rustup and Rust with gnu target
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --default-host x86_64-unknown-linux-gnu \
-    && . $HOME/.cargo/env \
-    && rustup component add rustfmt clippy \
-    && rm -rf /tmp/*
-
-# Set environment variables for Rust
-ENV PATH="/root/.cargo/bin:${PATH}"
-ENV RUSTUP_HOME="/root/.rustup"
-ENV CARGO_HOME="/root/.cargo"
-
-
-
-CMD ["/bin/bash"]
+RUN curl -s 'https://get.sdkman.io' | bash && \
+    bash -c "source /root/.sdkman/bin/sdkman-init.sh && \
+      for v in 8.0.402-tem 11.0.23-tem 17.0.11-tem 21.0.3-tem 25.0.1-tem; do sdk install java \$v; done"
