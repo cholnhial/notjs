@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: notjs
+  profiles:
+    active: '@spring.profiles.active@'
