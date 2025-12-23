@@ -1,7 +1,7 @@
-import Terminal from './components/Terminal'
+import NotJS from './components/NotJS'
 
 function App() {
-  return <Terminal />
+  return <NotJS />
 }
 
 export default App
