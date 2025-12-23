@@ -47,18 +47,31 @@ public class JavaExecutor implements NotJSExecutor {
         String javacExecutable = javaHome + "/bin/javac";
 
         // Extract class name from source code or use default
-        String className = extractClassName(srcCode);
-        String fileName = className + ".java";
+        String originalClassName = extractClassName(srcCode);
 
-        // Create temporary file with source code
-        Path javaFilePath = NotJSUtils.createTempFile(fileName, srcCode);
+        // Generate random prefix for unique file/class name
+        String randomPrefix = NotJSUtils.generateRandomExecutableName("java");
+        String newClassName = randomPrefix + "_" + originalClassName;
+        String fileName = newClassName + ".java";
+
+        // Replace class name in source code with the new prefixed name
+        String modifiedSrcCode = replaceClassName(srcCode, originalClassName, newClassName);
+
+        // Ensure temp directory exists and create file with modified source code
+        NotJSUtils.ensureTempDirectoryExists();
+        Path tempDir = NotJSUtils.getTempDirectory();
+        Path javaFilePath = tempDir.resolve(fileName);
+        java.nio.file.Files.writeString(javaFilePath, modifiedSrcCode,
+            java.nio.file.StandardOpenOption.CREATE,
+            java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
+
         log.info("Java source code written to: {} (version: {})", javaFilePath, version);
 
         int versionNumber = Integer.parseInt(version);
 
         // For Java 8-10, we need to compile first then run
         if (versionNumber < 11) {
-            return executeWithCompilation(javacExecutable, javaExecutable, javaFilePath, className, arguments, version);
+            return executeWithCompilation(javacExecutable, javaExecutable, javaFilePath, newClassName, arguments, version);
         } else {
             // For Java 11+, use --source flag to run directly
             return executeWithSourceFlag(javaExecutable, javaFilePath, arguments, version, versionNumber);
@@ -198,5 +211,30 @@ public class JavaExecutor implements NotJSExecutor {
             className.append(c);
         }
         return className.toString().trim();
+    }
+
+    /**
+     * Replaces the class name in Java source code.
+     * Handles both "public class OldName" and "class OldName" patterns.
+     *
+     * @param srcCode the original source code
+     * @param oldClassName the class name to replace
+     * @param newClassName the new class name
+     * @return the modified source code with replaced class name
+     */
+    private String replaceClassName(String srcCode, String oldClassName, String newClassName) {
+        // Replace "public class OldName" with "public class NewName"
+        String modified = srcCode.replaceAll(
+            "\\bpublic\\s+class\\s+" + oldClassName + "\\b",
+            "public class " + newClassName
+        );
+
+        // Replace "class OldName" (non-public) with "class NewName"
+        modified = modified.replaceAll(
+            "\\bclass\\s+" + oldClassName + "\\b",
+            "class " + newClassName
+        );
+
+        return modified;
     }
 }
