@@ -413,14 +413,14 @@ export default function NotJS({
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-gray-950">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-8 py-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NotJS</h1>
             <img
               src="/notjslogo.png"
               alt="NotJS Logo"
-              className="h-8 w-8 object-contain"
+              className="h-14 object-contain"
             />
           </div>
 
@@ -428,7 +428,7 @@ export default function NotJS({
           <select
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           >
             {languages.map(lang => (
               <option key={lang} value={lang}>
@@ -442,7 +442,7 @@ export default function NotJS({
             <select
               value={selectedVersion || defaultVersion || ''}
               onChange={(e) => setSelectedVersion(e.target.value || null)}
-              className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             >
               {versions.map(version => (
                 <option key={version} value={version}>
@@ -456,7 +456,7 @@ export default function NotJS({
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
         >
           {isDarkMode ? (
@@ -475,13 +475,13 @@ export default function NotJS({
           style={{ width: `${leftPanelWidth}%` }}
         >
           {/* Code Panel Header */}
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">CODE</h2>
             <div className="flex items-center gap-2">
               {/* Run/Restart Button */}
               <button
                 onClick={handleRun}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-2 rounded-lg transition-colors ${
                   isRunning
                     ? 'bg-orange-500 hover:bg-orange-600 text-white'
                     : 'bg-green-500 hover:bg-green-600 text-white'
@@ -498,7 +498,7 @@ export default function NotJS({
               {/* Copy Code Button */}
               <button
                 onClick={() => copyToClipboard(code, 'code')}
-                className="p-2 rounded-md bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
                 title="Copy code"
               >
                 {codeCopied ? (
@@ -543,12 +543,12 @@ export default function NotJS({
         {/* Console Panel */}
         <div className="flex-1 flex flex-col">
           {/* Console Panel Header */}
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">CONSOLE</h2>
             {/* Copy Console Button */}
             <button
               onClick={copyConsoleOutput}
-              className="p-2 rounded-md bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
               title="Copy output"
             >
               {consoleCopied ? (
