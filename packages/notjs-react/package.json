@@ -1,7 +1,7 @@
 {
   "name": "notjs-react",
   "version": "0.1.6",
-  "description": "A React component for interactive code execution with WebSocket terminal support",
+  "description": "A React component for interactive code execution for C,C++,Java, Go and Rust",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -32,18 +32,18 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.6.0",
+    "@monaco-editor/react": "^4.7.0-rc.0",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@xterm/xterm": "^5.5.0",
     "lucide-react": "^0.469.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.6.2",
     "vite": "^6.0.7",
