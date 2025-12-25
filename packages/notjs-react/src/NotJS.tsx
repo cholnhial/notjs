@@ -55,6 +55,22 @@ int main() {
 
     return 0;
 }
+`,
+  rust: `use std::io::{self, Write};
+
+fn main() {
+    println!("Hello from NotJS Rust!");
+    print!("Enter your name: ");
+    io::stdout().flush().unwrap();
+
+    let mut name = String::new();
+    io::stdin()
+        .read_line(&mut name)
+        .expect("Failed to read line");
+
+    let name = name.trim();
+    println!("Hello, {}!", name);
+}
 `
 }
 
