@@ -38,6 +38,23 @@ int main() {
 
     return 0;
 }
+`,
+  c: `#include <stdio.h>
+#include <string.h>
+
+int main() {
+    printf("Hello from NotJS C!\\n");
+    printf("Enter your name: ");
+
+    char name[100];
+    if (fgets(name, sizeof(name), stdin) != NULL) {
+        // Remove trailing newline
+        name[strcspn(name, "\\n")] = '\\0';
+        printf("Hello, %s!\\n", name);
+    }
+
+    return 0;
+}
 `
 }
 
