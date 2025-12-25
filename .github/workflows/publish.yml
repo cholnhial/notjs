@@ -31,7 +31,7 @@ jobs:
       - name: Build library
         run: |
           cd packages/notjs-react
-          npm run build
+          npm run build:prod
 
       - name: Publish to npm
         working-directory: packages/notjs-react
