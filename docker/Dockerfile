@@ -1,5 +1,7 @@
 FROM debian:bookworm-slim
 
+ARG NOTJSPROFILE=prod
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl bash zip unzip build-essential gcc g++ rustc golang ca-certificates maven && \
@@ -15,6 +17,6 @@ COPY pom.xml .
 COPY src ./src
 COPY packages ./packages
 
-RUN JAVA_HOME=/root/.sdkman/candidates/java/25.0.1-tem mvn clean package -DskipTests -Pprod
+RUN JAVA_HOME=/root/.sdkman/candidates/java/25.0.1-tem mvn clean package -DskipTests -P${NOTJSPROFILE}
 
 CMD ["/root/.sdkman/candidates/java/25.0.1-tem/bin/java", "-jar", "/app/target/notjs-0.0.1-SNAPSHOT.jar"]

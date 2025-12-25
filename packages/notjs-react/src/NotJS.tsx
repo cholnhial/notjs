@@ -11,6 +11,7 @@ import {
   Check,
   AlertCircle
 } from 'lucide-react'
+import notjsLogo from './assets/notjslogo.png'
 
 // Default code templates
 const DEFAULT_CODE: Record<string, string> = {
@@ -71,6 +72,28 @@ fn main() {
     let name = name.trim();
     println!("Hello, {}!", name);
 }
+`,
+  go: `package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+    "strings"
+)
+
+func main() {
+    fmt.Println("Hello from NotJS Go!")
+    fmt.Print("Enter your name: ")
+
+    reader := bufio.NewReader(os.Stdin)
+    name, _ := reader.ReadString('\\n')
+
+    // Remove trailing newline
+    name = strings.TrimSpace(name)
+
+    fmt.Printf("Hello, %s!\\n", name)
+}
 `
 }
 
@@ -104,6 +127,11 @@ export default function NotJS({
   const [code, setCode] = useState(initialCode || DEFAULT_CODE[initialLanguage] || DEFAULT_CODE.java)
   const [languages, setLanguages] = useState<string[]>([])
   const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage)
+  const [languageInfo, setLanguageInfo] = useState<{versions: string[], default: string | null, code: string}>({
+    default: null,
+    code: '',
+    versions: []
+  })
   const [versions, setVersions] = useState<string[]>([])
   const [selectedVersion, setSelectedVersion] = useState<string | null>(initialVersion)
   const [defaultVersion, setDefaultVersion] = useState<string | null>(null)
@@ -172,23 +200,26 @@ export default function NotJS({
       .then((info: { availableVersions: string[]; defaultVersion: string }) => {
         setVersions(info.availableVersions)
         setDefaultVersion(info.defaultVersion)
-        setSelectedVersion(null) // Reset to default
+        setSelectedVersion(info.defaultVersion)
+        setLanguageInfo({
+          default: info.defaultVersion,
+          versions: info.availableVersions,
+          code: DEFAULT_CODE[selectedLanguage]
+        })
+        setCode(DEFAULT_CODE[selectedLanguage])
       })
       .catch(err => {
         console.error('Failed to fetch language info:', err)
       })
   }, [selectedLanguage, apiBaseUrl])
 
-  // Load default code when language changes
-  useEffect(() => {
-    if (DEFAULT_CODE[selectedLanguage]) {
-      setCode(DEFAULT_CODE[selectedLanguage])
-    }
-  }, [selectedLanguage])
-
   // Initialize xterm and WebSocket
   useEffect(() => {
     if (!terminalRef.current || isAvailable !== true) return
+
+    // Wait for versions to be loaded before connecting
+    // (except on initial mount where defaultVersion may not be set yet)
+    if (defaultVersion === null && versions.length === 0) return
 
     // Create terminal
     const term = new XTerm({
@@ -235,13 +266,13 @@ export default function NotJS({
       // Send initial execution request
       const executionRequest: ExecutionRequest = {
         language: selectedLanguage,
-        code: code,
-        version: selectedVersion || defaultVersion || null,
+        code: languageInfo.code,
+        version:  languageInfo.default || selectedVersion || null,
         arguments: []
       }
 
       ws.send(JSON.stringify(executionRequest))
-      term.write(`\x1b[1;36m> Running ${selectedLanguage} ${selectedVersion || defaultVersion || ''}...\x1b[0m\r\n`)
+      term.write(`\x1b[1;36m> Running ${selectedLanguage} ${languageInfo.default || defaultVersion || ''}...\x1b[0m\r\n`)
     }
 
     ws.onmessage = (event) => {
@@ -292,7 +323,7 @@ export default function NotJS({
         ws.close()
       }
     }
-  }, [isAvailable, websocketUrl, selectedLanguage, code, selectedVersion, defaultVersion, isDarkMode])
+  }, [isAvailable, websocketUrl, languageInfo, isDarkMode])
 
   // Update terminal theme when dark mode changes
   useEffect(() => {
@@ -339,13 +370,13 @@ export default function NotJS({
 
       const executionRequest: ExecutionRequest = {
         language: selectedLanguage,
-        code: code,
-        version: selectedVersion || defaultVersion || null,
+        code: languageInfo.code,
+        version: selectedVersion || languageInfo.default || null,
         arguments: []
       }
 
       ws.send(JSON.stringify(executionRequest))
-      xtermRef.current?.write(`\x1b[1;36m> Running ${selectedLanguage} ${selectedVersion || defaultVersion || ''}...\x1b[0m\r\n`)
+      xtermRef.current?.write(`\x1b[1;36m> Running ${selectedLanguage} ${selectedVersion || languageInfo.default || defaultVersion || ''}...\x1b[0m\r\n`)
     }
 
     ws.onmessage = (event) => {
@@ -520,16 +551,16 @@ export default function NotJS({
       <div className="flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
         {/* Header */}
         {!hideHeader && (
-          <div className="flex items-center justify-between px-8 py-5 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
+          <div className="flex items-center justify-between px-8 py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
                 NotJS
               </h1>
               <img
-                  src="/notjslogo.png"
+                  src={notjsLogo}
                   alt="NotJS Logo"
-                  className="h-14 object-contain rounded-xl"
+                  className="h-10 object-contain rounded-xl"
               />
             </div>
 
@@ -581,20 +612,20 @@ export default function NotJS({
               style={{ width: `${leftPanelWidth}%` }}
           >
             {/* Code Header */}
-            <div className="flex items-center justify-between px-8 py-4 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
-              <h2 className="text-md font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
+            <div className="flex items-center justify-between px-8 py-2 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
+              <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
                 CODE
               </h2>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {/* Restart */}
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>
                     <button
                         onClick={handleRun}
-                        className="p-2.5 rounded-xl transition bg-orange-500/90 hover:bg-orange-500 text-white"
+                        className="p-1.5 rounded-lg transition bg-orange-500/90 hover:bg-orange-500 text-white"
                     >
-                      <RotateCcw className="w-4 h-4" />
+                      <RotateCcw className="w-3.5 h-3.5" />
                     </button>
                   </Tooltip.Trigger>
                   <Tooltip.Portal>
@@ -613,12 +644,12 @@ export default function NotJS({
                   <Tooltip.Trigger asChild>
                     <button
                         onClick={() => copyToClipboard(code, 'code')}
-                        className="p-2.5 rounded-xl bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                        className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
                     >
                       {codeCopied ? (
-                          <Check className="w-4 h-4 text-emerald-600" />
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
                       ) : (
-                          <Copy className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                          <Copy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
                       )}
                     </button>
                   </Tooltip.Trigger>
@@ -666,8 +697,8 @@ export default function NotJS({
 
           {/* Console Panel */}
           <div className="flex-1 flex flex-col bg-white dark:bg-neutral-950">
-            <div className="flex items-center justify-between px-8 py-4 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
-              <h2 className="text-md font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
+            <div className="flex items-center justify-between px-8 py-2 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
+              <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
                 CONSOLE
               </h2>
 
@@ -675,12 +706,12 @@ export default function NotJS({
                 <Tooltip.Trigger asChild>
                   <button
                       onClick={copyConsoleOutput}
-                      className="p-2.5 rounded-xl bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                      className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
                   >
                     {consoleCopied ? (
-                        <Check className="w-4 h-4 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
                     ) : (
-                        <Copy className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                        <Copy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
                     )}
                   </button>
                 </Tooltip.Trigger>
