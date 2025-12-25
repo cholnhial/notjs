@@ -85,7 +85,7 @@
 							<outputDirectory>target/classes/static</outputDirectory>
 							<resources>
 								<resource>
-									<directory>src/frontend/dist</directory>
+									<directory>packages/demo-app/dist</directory>
 									<filtering>true</filtering>
 								</resource>
 							</resources>
@@ -101,7 +101,7 @@
 							<outputDirectory>target/classes/static/assets</outputDirectory>
 							<resources>
 								<resource>
-									<directory>src/frontend/dist/assets</directory>
+									<directory>packages/demo-app/dist/assets</directory>
 									<filtering>true</filtering>
 								</resource>
 							</resources>
@@ -192,7 +192,66 @@
 						</executions>
 						<configuration>
 							<nodeVersion>${node.version}</nodeVersion>
-							<workingDirectory>src/frontend</workingDirectory>
+							<workingDirectory>packages</workingDirectory>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<properties>
+				<spring.profiles.active>prod</spring.profiles.active>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<version>2.0.0</version>
+
+						<executions>
+							<execution>
+								<id>Install node and npm</id>
+								<goals>
+									<goal>install-node-and-npm</goal>
+								</goals>
+								<phase>generate-resources</phase>
+								<configuration>
+									<nodeVersion>${node.version}</nodeVersion>
+									<npmVersion>${npm.version}</npmVersion>
+								</configuration>
+							</execution>
+
+							<execution>
+								<id>npm install</id>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<phase>generate-resources</phase>
+								<configuration>
+									<arguments>install</arguments>
+								</configuration>
+							</execution>
+
+							<execution>
+								<id>npm build</id>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<phase>generate-resources</phase>
+								<configuration>
+									<arguments>run build</arguments>
+								</configuration>
+							</execution>
+						</executions>
+						<configuration>
+							<nodeVersion>${node.version}</nodeVersion>
+							<workingDirectory>packages</workingDirectory>
 						</configuration>
 					</plugin>
 					<plugin>

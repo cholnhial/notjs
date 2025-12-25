@@ -1,4 +1,4 @@
-import NotJS from './components/NotJS'
+import { NotJS } from 'notjs-react'
 
 function App() {
   return (

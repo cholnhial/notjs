@@ -1,0 +1,57 @@
+{
+  "name": "notjs-react",
+  "version": "0.1.0",
+  "description": "A React component for interactive code execution with WebSocket terminal support",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/notjs-react.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build && tsc --emitDeclarationOnly",
+    "build:prod": "vite build",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "code-execution",
+    "terminal",
+    "websocket",
+    "monaco-editor",
+    "xterm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
+    "@radix-ui/react-tooltip": "^1.1.6",
+    "@xterm/xterm": "^5.5.0",
+    "lucide-react": "^0.469.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.2",
+    "vite": "^6.0.7",
+    "vite-plugin-dts": "^4.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/notjs.git",
+    "directory": "packages/notjs-react"
+  }
+}

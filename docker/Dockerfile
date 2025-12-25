@@ -13,7 +13,8 @@ WORKDIR /app
 
 COPY pom.xml .
 COPY src ./src
+COPY packages ./packages
 
-RUN JAVA_HOME=/root/.sdkman/candidates/java/25.0.1-tem mvn clean package -DskipTests
+RUN JAVA_HOME=/root/.sdkman/candidates/java/25.0.1-tem mvn clean package -DskipTests -Pprod
 
 CMD ["/root/.sdkman/candidates/java/25.0.1-tem/bin/java", "-jar", "/app/target/notjs-0.0.1-SNAPSHOT.jar"]

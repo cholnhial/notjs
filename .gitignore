@@ -33,5 +33,10 @@ build/
 .vscode/
 
 ## React
-src/frontend/node_modules
-src/frontend/node
+packages/node_modules
+packages/demo-app/node
+packages/demo-app/node_modules
+packages/demo-app/dist
+packages/notjs-react/node
+packages/notjs-react/node_modules
+packages/notjs-react/dist

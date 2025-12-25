@@ -1,0 +1,25 @@
+{
+  "name": "notjs-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "notjs-react",
+    "demo-app"
+  ],
+  "scripts": {
+    "build:lib": "npm run build --workspace=notjs-react",
+    "dev:demo": "npm run dev --workspace=demo-app",
+    "build:demo": "npm run build --workspace=demo-app",
+    "build": "npm run build:prod --workspace=notjs-react && npm run build:demo",
+    "build:dev": "npm run build:lib && npm run build:dev --workspace=demo-app"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4"
+  },
+  "overrides": {
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
