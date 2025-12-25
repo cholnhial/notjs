@@ -1,5 +1,9 @@
 # Claude Project Guidelines
 
+## Technology Stack
+
+This project uses **Tailwind CSS v4** for styling.
+
 ## Code Comments
 
 Add comments for complex behavior to aid future understanding, but use sparingly. Only comment when:

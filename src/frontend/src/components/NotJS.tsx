@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
+import * as Tooltip from '@radix-ui/react-tooltip'
 import {
-  Play,
   RotateCcw,
   Copy,
   Moon,
   Sun,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-react'
 
 // Default code templates
@@ -52,27 +53,34 @@ export interface NotJSProps {
   apiBaseUrl?: string
   initialCode?: string
   initialLanguage?: string
+  initialVersion?: string
+  initialDarkMode?: boolean
+  hideHeader?: boolean
 }
 
 export default function NotJS({
   websocketUrl = 'ws://localhost:8080/terminal',
   apiBaseUrl = 'http://localhost:8080/api',
   initialCode,
-  initialLanguage = 'java'
+  initialLanguage = 'java',
+  initialVersion = '25',
+  initialDarkMode = true,
+  hideHeader = false
 }: NotJSProps) {
   // State
   const [code, setCode] = useState(initialCode || DEFAULT_CODE[initialLanguage] || DEFAULT_CODE.java)
   const [languages, setLanguages] = useState<string[]>([])
   const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage)
   const [versions, setVersions] = useState<string[]>([])
-  const [selectedVersion, setSelectedVersion] = useState<string | null>(null)
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(initialVersion)
   const [defaultVersion, setDefaultVersion] = useState<string | null>(null)
-  const [isRunning, setIsRunning] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(initialDarkMode)
   const [codeCopied, setCodeCopied] = useState(false)
   const [consoleCopied, setConsoleCopied] = useState(false)
   const [leftPanelWidth, setLeftPanelWidth] = useState(50) // percentage
   const [isResizing, setIsResizing] = useState(false)
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string>('')
 
   // Refs
   const terminalRef = useRef<HTMLDivElement>(null)
@@ -80,6 +88,35 @@ export default function NotJS({
   const wsRef = useRef<WebSocket | null>(null)
   const inputBufferRef = useRef<string>('')
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Check API availability for initial language and version
+  useEffect(() => {
+    const checkAvailability = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/language/info/${initialLanguage}`)
+        if (!response.ok) {
+          throw new Error('Language not supported')
+        }
+        const info = await response.json()
+
+        if (!info.availableVersions.includes(initialVersion)) {
+          setIsAvailable(false)
+          setErrorMessage(
+            `${initialLanguage.toUpperCase()} version ${initialVersion} is not available. Available versions: ${info.availableVersions.join(', ')}`
+          )
+        } else {
+          setIsAvailable(true)
+        }
+      } catch (error) {
+        setIsAvailable(false)
+        setErrorMessage(
+          `Failed to connect to NotJS API at ${apiBaseUrl}. Please ensure the Spring Boot backend is running.`
+        )
+      }
+    }
+
+    checkAvailability()
+  }, [apiBaseUrl, initialLanguage, initialVersion])
 
   // Fetch supported languages on mount
   useEffect(() => {
@@ -118,7 +155,7 @@ export default function NotJS({
 
   // Initialize xterm and WebSocket
   useEffect(() => {
-    if (!terminalRef.current) return
+    if (!terminalRef.current || isAvailable !== true) return
 
     // Create terminal
     const term = new XTerm({
@@ -160,7 +197,6 @@ export default function NotJS({
 
     ws.onopen = () => {
       console.log('WebSocket connected')
-      setIsRunning(true)
       term.write('\x1b[1;32m> Connected\x1b[0m\r\n')
 
       // Send initial execution request
@@ -187,7 +223,6 @@ export default function NotJS({
 
     ws.onclose = () => {
       console.log('WebSocket closed')
-      setIsRunning(false)
       term.write('\x1b[1;33m\r\n[DISCONNECTED]\x1b[0m\r\n')
     }
 
@@ -224,7 +259,7 @@ export default function NotJS({
         ws.close()
       }
     }
-  }, []) // Only run once on mount
+  }, [isAvailable, websocketUrl, selectedLanguage, code, selectedVersion, defaultVersion, isDarkMode])
 
   // Update terminal theme when dark mode changes
   useEffect(() => {
@@ -245,12 +280,19 @@ export default function NotJS({
   const handleRun = () => {
     if (!xtermRef.current || !terminalRef.current) return
 
-    // Close existing connection
+    // Close existing connection and remove its handlers to prevent them from writing to terminal
     if (wsRef.current) {
-      wsRef.current.close()
+      const oldWs = wsRef.current
+      // Remove all event handlers before closing
+      oldWs.onopen = null
+      oldWs.onmessage = null
+      oldWs.onerror = null
+      oldWs.onclose = null
+      oldWs.close()
     }
 
-    // Clear terminal
+    // Clear terminal completely (including scrollback buffer)
+    xtermRef.current.reset()
     xtermRef.current.clear()
     inputBufferRef.current = ''
 
@@ -260,7 +302,6 @@ export default function NotJS({
 
     ws.onopen = () => {
       console.log('WebSocket reconnected')
-      setIsRunning(true)
       xtermRef.current?.write('\x1b[1;32m> Connected\x1b[0m\r\n')
 
       const executionRequest: ExecutionRequest = {
@@ -286,7 +327,6 @@ export default function NotJS({
 
     ws.onclose = () => {
       console.log('WebSocket closed')
-      setIsRunning(false)
       xtermRef.current?.write('\x1b[1;33m\r\n[DISCONNECTED]\x1b[0m\r\n')
     }
 
@@ -410,162 +450,226 @@ export default function NotJS({
     }
   }, [leftPanelWidth])
 
-  return (
-    <div className="flex flex-col h-screen w-screen bg-white dark:bg-gray-950">
-      {/* Header */}
-      <div className="flex items-center justify-between px-8 py-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">NotJS</h1>
-            <img
-              src="/notjslogo.png"
-              alt="NotJS Logo"
-              className="h-14 object-contain"
-            />
+  // Show error fallback if API is not available
+  if (isAvailable === false) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-neutral-50 dark:bg-neutral-950 p-8">
+        <div className="max-w-2xl w-full border-2 border-red-500 rounded-2xl p-8 bg-white dark:bg-neutral-900">
+          <div className="flex items-start gap-4">
+            <AlertCircle className="w-8 h-8 text-red-500 flex-shrink-0 mt-1" />
+            <div>
+              <h2 className="text-2xl font-bold text-red-600 dark:text-red-500 mb-3">
+                NotJS Configuration Error
+              </h2>
+              <p className="text-red-700 dark:text-red-400 text-lg leading-relaxed">
+                {errorMessage}
+              </p>
+            </div>
           </div>
+        </div>
+      </div>
+    )
+  }
 
-          {/* Language Selector */}
-          <select
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          >
-            {languages.map(lang => (
-              <option key={lang} value={lang}>
-                {lang.toUpperCase()}
-              </option>
-            ))}
-          </select>
+  // Show loading state while checking availability
+  if (isAvailable === null) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
+        <div className="text-neutral-600 dark:text-neutral-400 text-lg">
+          Loading NotJS...
+        </div>
+      </div>
+    )
+  }
 
-          {/* Version Selector */}
-          {versions.length > 0 && (
+  return (
+    <Tooltip.Provider delayDuration={200}>
+      <div className="flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
+        {/* Header */}
+        {!hideHeader && (
+          <div className="flex items-center justify-between px-8 py-5 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
+                NotJS
+              </h1>
+              <img
+                  src="/notjslogo.png"
+                  alt="NotJS Logo"
+                  className="h-14 object-contain rounded-xl"
+              />
+            </div>
+
             <select
-              value={selectedVersion || defaultVersion || ''}
-              onChange={(e) => setSelectedVersion(e.target.value || null)}
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
             >
-              {versions.map(version => (
-                <option key={version} value={version}>
-                  v{version} {version === defaultVersion ? '(default)' : ''}
-                </option>
+              {languages.map(lang => (
+                  <option key={lang} value={lang}>
+                    {lang.toUpperCase()}
+                  </option>
               ))}
             </select>
-          )}
+
+            {versions.length > 0 && (
+                <select
+                    value={selectedVersion || defaultVersion || ''}
+                    onChange={(e) => setSelectedVersion(e.target.value || null)}
+                    className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+                >
+                  {versions.map(version => (
+                      <option key={version} value={version}>
+                        v{version} {version === defaultVersion ? '(default)' : ''}
+                      </option>
+                  ))}
+                </select>
+            )}
+          </div>
+
+          <button
+              onClick={toggleTheme}
+              className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+          >
+            {isDarkMode ? (
+                <Sun className="w-5 h-5 text-yellow-500" />
+            ) : (
+                <Moon className="w-5 h-5 text-neutral-700" />
+            )}
+          </button>
         </div>
+        )}
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDarkMode ? (
-            <Sun className="w-5 h-5 text-yellow-500" />
-          ) : (
-            <Moon className="w-5 h-5 text-gray-700" />
-          )}
-        </button>
-      </div>
+        {/* Main Content */}
+        <div ref={containerRef} className="flex flex-1 overflow-hidden relative">
+          {/* Code Panel */}
+          <div
+              className="flex flex-col bg-white dark:bg-neutral-900"
+              style={{ width: `${leftPanelWidth}%` }}
+          >
+            {/* Code Header */}
+            <div className="flex items-center justify-between px-8 py-4 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
+              <h2 className="text-md font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
+                CODE
+              </h2>
 
-      {/* Main Content */}
-      <div ref={containerRef} className="flex flex-1 overflow-hidden relative">
-        {/* Code Panel */}
-        <div
-          className="flex flex-col border-r border-gray-200 dark:border-gray-800"
-          style={{ width: `${leftPanelWidth}%` }}
-        >
-          {/* Code Panel Header */}
-          <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">CODE</h2>
-            <div className="flex items-center gap-2">
-              {/* Run/Restart Button */}
-              <button
-                onClick={handleRun}
-                className={`p-2 rounded-lg transition-colors ${
-                  isRunning
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-                title={isRunning ? 'Restart program' : 'Run program'}
-              >
-                {isRunning ? (
-                  <RotateCcw className="w-4 h-4" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Restart */}
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button
+                        onClick={handleRun}
+                        className="p-2.5 rounded-xl transition bg-orange-500/90 hover:bg-orange-500 text-white"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                        className="rounded-lg bg-neutral-900 dark:bg-neutral-800 px-3 py-1.5 text-xs text-white shadow-lg"
+                        sideOffset={5}
+                    >
+                      Restart program
+                      <Tooltip.Arrow className="fill-neutral-900 dark:fill-neutral-800" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
 
-              {/* Copy Code Button */}
-              <button
-                onClick={() => copyToClipboard(code, 'code')}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-                title="Copy code"
-              >
-                {codeCopied ? (
-                  <Check className="w-4 h-4 text-green-600" />
-                ) : (
-                  <Copy className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                )}
-              </button>
+                {/* Copy Code */}
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <button
+                        onClick={() => copyToClipboard(code, 'code')}
+                        className="p-2.5 rounded-xl bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                    >
+                      {codeCopied ? (
+                          <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                          <Copy className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                      )}
+                    </button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content
+                        className="rounded-lg bg-neutral-900 dark:bg-neutral-800 px-3 py-1.5 text-xs text-white shadow-lg"
+                        sideOffset={5}
+                    >
+                      Copy code
+                      <Tooltip.Arrow className="fill-neutral-900 dark:fill-neutral-800" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden rounded-b-2xl">
+              <Editor
+                  height="100%"
+                  language={selectedLanguage}
+                  value={code}
+                  onChange={(value) => setCode(value || '')}
+                  theme={isDarkMode ? 'vs-dark' : 'light'}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    tabSize: 2,
+                    wordWrap: 'on',
+                    padding: { top: 12, bottom: 12 }
+                  }}
+              />
             </div>
           </div>
 
-          {/* Monaco Editor */}
-          <div className="flex-1 overflow-hidden">
-            <Editor
-              height="100%"
-              language={selectedLanguage}
-              value={code}
-              onChange={(value) => setCode(value || '')}
-              theme={isDarkMode ? 'vs-dark' : 'light'}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                lineNumbers: 'on',
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                tabSize: 2,
-                wordWrap: 'on',
-                padding: { top: 10, bottom: 10 }
-              }}
+          {/* Resize Handle */}
+          <div
+              className={`w-1 bg-black/5 dark:bg-white/5 hover:bg-blue-500 cursor-col-resize transition ${
+                  isResizing ? 'bg-blue-500' : ''
+              }`}
+              onMouseDown={handleMouseDown}
+          />
+
+          {/* Console Panel */}
+          <div className="flex-1 flex flex-col bg-white dark:bg-neutral-950">
+            <div className="flex items-center justify-between px-8 py-4 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
+              <h2 className="text-md font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
+                CONSOLE
+              </h2>
+
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                      onClick={copyConsoleOutput}
+                      className="p-2.5 rounded-xl bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                  >
+                    {consoleCopied ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                    ) : (
+                        <Copy className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
+                    )}
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                      className="rounded-lg bg-neutral-900 dark:bg-neutral-800 px-3 py-1.5 text-xs text-white shadow-lg"
+                      sideOffset={5}
+                  >
+                    Copy output
+                    <Tooltip.Arrow className="fill-neutral-900 dark:fill-neutral-800" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </div>
+
+            <div
+                ref={terminalRef}
+                className="flex-1 overflow-hidden rounded-b-2xl bg-white dark:bg-neutral-950 p-3"
             />
           </div>
         </div>
-
-        {/* Resize Handle */}
-        <div
-          className={`w-1 bg-gray-300 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 cursor-col-resize transition-colors ${
-            isResizing ? 'bg-blue-500 dark:bg-blue-600' : ''
-          }`}
-          onMouseDown={handleMouseDown}
-        />
-
-        {/* Console Panel */}
-        <div className="flex-1 flex flex-col">
-          {/* Console Panel Header */}
-          <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">CONSOLE</h2>
-            {/* Copy Console Button */}
-            <button
-              onClick={copyConsoleOutput}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-              title="Copy output"
-            >
-              {consoleCopied ? (
-                <Check className="w-4 h-4 text-green-600" />
-              ) : (
-                <Copy className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-              )}
-            </button>
-          </div>
-
-          {/* XTerm Terminal */}
-          <div
-            ref={terminalRef}
-            className="flex-1 overflow-hidden bg-white dark:bg-gray-950 p-2"
-          />
-        </div>
       </div>
-    </div>
+    </Tooltip.Provider>
   )
 }
