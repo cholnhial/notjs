@@ -14,8 +14,8 @@ import java.util.List;
 public class GoExecutor implements NotJSExecutor {
 
     private static final String GO_COMPILER = "go";
-    private static final String DEFAULT_VERSION = "1.21";
-    private static final List<String> AVAILABLE_VERSIONS = List.of("1.19", "1.20", "1.21", "1.22", "1.23");
+    private static final String DEFAULT_VERSION = "1.19.8";
+    private static final List<String> AVAILABLE_VERSIONS = List.of("1.19.8");
 
     @Override
     public Process execute(String srcCode, String version, List<String> arguments) throws IOException {
