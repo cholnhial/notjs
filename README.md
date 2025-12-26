@@ -10,7 +10,7 @@ It is intended to be used mainly on blogs where you want to demo language featur
 There are other platforms that do this, such as JDoodle and Replit. However, they have API limits which I wasn't happy with. I also wanted to use this as an opportunity to use Claude Code, and why not—it's fun reinventing the wheel sometimes.
 
 <p align="center">
-  <img src="docs/images/demo.png" alt="NotJS Demo Screenshot" width="700"/>
+  <img src="docs/screenshots/demo.png" alt="NotJS Demo Screenshot" width="700"/>
 </p>
 
 **[View Live Demo](https://notjs.chol.dev)**
