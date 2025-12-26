@@ -12,7 +12,7 @@ There are other platforms that do this, such as JDoodle and Replit. However, the
 ## AI Disclosure & Security
 
 <p align="center">
-  <img src="docs/images/ai-disclosure.png" alt="AI Disclosure"/>
+  <img src="docs/images/ai-disclosure.png" alt="AI Disclosure" width="500"/>
 </p>
 
 This project was developed with the help of Claude Code. The UI is my design but was mostly implemented by Claude and later tweaked.
