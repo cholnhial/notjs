@@ -1,6 +1,7 @@
 package dev.chol.notjs.handler;
 
 import dev.chol.notjs.dto.ExecutionRequest;
+import dev.chol.notjs.service.ExecutionHandle;
 import dev.chol.notjs.service.NotJSExecutor;
 import dev.chol.notjs.service.ExecutorFactory;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,7 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
 
     private final ExecutorFactory executorFactory;
 
-
-    private final Map<String, Process> sessionProcessMap = new ConcurrentHashMap<>();
+    private final Map<String, ExecutionHandle> sessionHandleMap = new ConcurrentHashMap<>();
     private final Map<String, BufferedWriter> sessionWriterMap = new ConcurrentHashMap<>();
     private final Map<String, Boolean> sessionInitializedMap = new ConcurrentHashMap<>();
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
@@ -91,18 +91,18 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
                 );
             }
 
-            // Execute the code with the specified or default version
-            Process process = executor.execute(request.code(), version, request.arguments());
-            sessionProcessMap.put(sessionId, process);
+            // Execute the code with the specified or default version and get execution handle
+            ExecutionHandle handle = executor.execute(request.code(), version, request.arguments());
+            sessionHandleMap.put(sessionId, handle);
 
-            // Set up process I/O streams
+            // Set up process I/O streams using the handle
             BufferedWriter processWriter = new BufferedWriter(
-                new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8)
+                new OutputStreamWriter(handle.getOutputStream(), StandardCharsets.UTF_8)
             );
             sessionWriterMap.put(sessionId, processWriter);
 
             // Start reading process output
-            startOutputReader(session, process);
+            startOutputReader(session, handle);
 
             // Mark session as initialized
             sessionInitializedMap.put(sessionId, true);
@@ -128,10 +128,10 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
         cleanupSession(session.getId());
     }
 
-    private void startOutputReader(WebSocketSession session, Process process) {
+    private void startOutputReader(WebSocketSession session, ExecutionHandle handle) {
         Thread outputThread = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    new InputStreamReader(handle.getInputStream(), StandardCharsets.UTF_8))) {
 
                 char[] buffer = new char[1024];
                 int bytesRead;
@@ -169,18 +169,14 @@ public class TerminalWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void cleanupSession(String sessionId) {
-        Process process = sessionProcessMap.remove(sessionId);
-        if (process != null && process.isAlive()) {
-            log.info("Destroying process for session: {}", sessionId);
-            process.destroy();
-            try {
-                process.waitFor();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                process.destroyForcibly();
-            }
+        // Force cleanup of execution handle (kills process and cleans temp files)
+        ExecutionHandle handle = sessionHandleMap.remove(sessionId);
+        if (handle != null && !handle.isCleanedUp()) {
+            log.info("Force cleanup for session: {}", sessionId);
+            handle.forceCleanup();
         }
 
+        // Close the writer
         BufferedWriter writer = sessionWriterMap.remove(sessionId);
         if (writer != null) {
             try {

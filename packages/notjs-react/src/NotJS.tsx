@@ -370,7 +370,7 @@ export default function NotJS({
 
       const executionRequest: ExecutionRequest = {
         language: selectedLanguage,
-        code: languageInfo.code,
+        code: code,
         version: selectedVersion || languageInfo.default || null,
         arguments: []
       }
@@ -548,6 +548,53 @@ export default function NotJS({
 
   return (
     <Tooltip.Provider delayDuration={200}>
+      <style>{`
+        /* Custom scrollbar for xterm terminal */
+        .xterm-viewport::-webkit-scrollbar {
+          width: 12px;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-thumb {
+          background: #a3a3a3;
+          border-radius: 6px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+
+        .xterm-viewport::-webkit-scrollbar-thumb:hover {
+          background: #8a8a8a;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+
+        /* Dark mode scrollbar */
+        .dark .xterm-viewport::-webkit-scrollbar-thumb {
+          background: #525252;
+          border-radius: 6px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+
+        .dark .xterm-viewport::-webkit-scrollbar-thumb:hover {
+          background: #6b6b6b;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+
+        /* Firefox scrollbar */
+        .xterm-viewport {
+          scrollbar-width: thin;
+          scrollbar-color: #a3a3a3 transparent;
+        }
+
+        .dark .xterm-viewport {
+          scrollbar-color: #525252 transparent;
+        }
+      `}</style>
       <div className="flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
         {/* Header */}
         {!hideHeader && (

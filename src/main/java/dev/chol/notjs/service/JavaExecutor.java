@@ -4,10 +4,13 @@ import dev.chol.notjs.util.NotJSUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -16,6 +19,9 @@ public class JavaExecutor implements NotJSExecutor {
     private static final String SDKMAN_JAVA_PATH = "/root/.sdkman/candidates/java";
     private static final String DEFAULT_VERSION = "25";
     private static final List<String> AVAILABLE_VERSIONS = List.of("8", "11", "17", "21", "25");
+
+    // ThreadLocal to track temp files per execution (thread-safe for concurrent executions)
+    private final ThreadLocal<Set<File>> tempFiles = ThreadLocal.withInitial(HashSet::new);
 
     // Mapping from short version to full SDKMAN version
     private static final java.util.Map<String, String> VERSION_MAP = java.util.Map.of(
@@ -27,7 +33,10 @@ public class JavaExecutor implements NotJSExecutor {
     );
 
     @Override
-    public Process execute(String srcCode, String version, List<String> arguments) throws IOException {
+    public ExecutionHandle execute(String srcCode, String version, List<String> arguments) throws IOException {
+        // Clear any previous temp files from this thread
+        getTempFiles().clear();
+
         // Use default version if not specified
         if (version == null || version.isBlank()) {
             version = DEFAULT_VERSION;
@@ -65,23 +74,29 @@ public class JavaExecutor implements NotJSExecutor {
             java.nio.file.StandardOpenOption.CREATE,
             java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
 
+        // Register the source file for cleanup using interface method
+        registerTempFile(javaFilePath.toFile());
+
         log.info("Java source code written to: {} (version: {})", javaFilePath, version);
 
         int versionNumber = Integer.parseInt(version);
 
         // For Java 8-10, we need to compile first then run
+        ExecutionHandle handle;
         if (versionNumber < 11) {
-            return executeWithCompilation(javacExecutable, javaExecutable, javaFilePath, newClassName, arguments, version);
+            handle = executeWithCompilation(javacExecutable, javaExecutable, javaFilePath, newClassName, arguments, version);
         } else {
             // For Java 11+, use --source flag to run directly
-            return executeWithSourceFlag(javaExecutable, javaFilePath, arguments, version, versionNumber);
+            handle = executeWithSourceFlag(javaExecutable, javaFilePath, arguments, version, versionNumber);
         }
+
+        return handle;
     }
 
     /**
      * Compile with javac and then run with java (for Java 8-10)
      */
-    private Process executeWithCompilation(String javacExecutable, String javaExecutable,
+    private ExecutionHandle executeWithCompilation(String javacExecutable, String javaExecutable,
                                           Path javaFilePath, String className,
                                           List<String> arguments, String version) throws IOException {
         Path tempDir = NotJSUtils.getTempDirectory();
@@ -105,7 +120,10 @@ public class JavaExecutor implements NotJSExecutor {
             if (exitCode != 0) {
                 // Compilation failed - return the compile process so user sees the error
                 log.error("Java compilation failed with exit code: {}", exitCode);
-                return compileProcess;
+                Set<File> filesToClean = new HashSet<>(getTempFiles());
+                ExecutionHandle handle = new ExecutionHandle(compileProcess, filesToClean, getLanguage());
+                scheduleCleanupAfterProcessTermination(handle, filesToClean);
+                return handle;
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -113,6 +131,10 @@ public class JavaExecutor implements NotJSExecutor {
         }
 
         log.info("Compilation successful, running class: {}", className);
+
+        // Register the compiled .class file for cleanup using interface method
+        Path classFilePath = tempDir.resolve(className + ".class");
+        registerTempFile(classFilePath.toFile());
 
         // Step 2: Run the compiled class
         List<String> runCommand = new ArrayList<>();
@@ -129,13 +151,16 @@ public class JavaExecutor implements NotJSExecutor {
         Process process = runBuilder.start();
         log.info("Java {} process started for class: {}", version, className);
 
-        return process;
+        Set<File> filesToClean = new HashSet<>(getTempFiles());
+        ExecutionHandle handle = new ExecutionHandle(process, filesToClean, getLanguage());
+        scheduleCleanupAfterProcessTermination(handle, filesToClean);
+        return handle;
     }
 
     /**
      * Run directly with --source flag (for Java 11+)
      */
-    private Process executeWithSourceFlag(String javaExecutable, Path javaFilePath,
+    private ExecutionHandle executeWithSourceFlag(String javaExecutable, Path javaFilePath,
                                          List<String> arguments, String version,
                                          int versionNumber) throws IOException {
         List<String> command = new ArrayList<>();
@@ -158,7 +183,10 @@ public class JavaExecutor implements NotJSExecutor {
         Process process = processBuilder.start();
         log.info("Java {} process started for file: {}", version, javaFilePath);
 
-        return process;
+        Set<File> filesToClean = new HashSet<>(getTempFiles());
+        ExecutionHandle handle = new ExecutionHandle(process, filesToClean, getLanguage());
+        scheduleCleanupAfterProcessTermination(handle, filesToClean);
+        return handle;
     }
 
     @Override
@@ -174,6 +202,46 @@ public class JavaExecutor implements NotJSExecutor {
     @Override
     public String getDefaultVersion() {
         return DEFAULT_VERSION;
+    }
+
+    @Override
+    public Set<File> getTempFiles() {
+        return tempFiles.get();
+    }
+
+    /**
+     * Schedules cleanup of temporary files after the process terminates.
+     * Only cleans up if forceCleanup() hasn't been called on the handle.
+     *
+     * @param handle the execution handle to check for cleanup status
+     * @param filesToClean the files to clean up
+     */
+    private void scheduleCleanupAfterProcessTermination(ExecutionHandle handle, Set<File> filesToClean) {
+        Thread cleanupThread = new Thread(() -> {
+            try {
+                handle.waitFor();
+
+                if (!handle.isCleanedUp()) {
+                    log.info("Java process terminated naturally, cleaning up {} temporary files", filesToClean.size());
+                    tempFiles.set(filesToClean);
+                    cleanupTempFiles();
+                    tempFiles.remove();
+                } else {
+                    log.debug("Java temp files already cleaned up via forceCleanup()");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                if (!handle.isCleanedUp()) {
+                    log.warn("Java cleanup thread interrupted, performing cleanup anyway");
+                    tempFiles.set(filesToClean);
+                    cleanupTempFiles();
+                    tempFiles.remove();
+                }
+            }
+        }, "java-executor-cleanup");
+
+        cleanupThread.setDaemon(true);
+        cleanupThread.start();
     }
 
     /**

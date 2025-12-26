@@ -29,7 +29,7 @@
     "monaco-editor",
     "xterm"
   ],
-  "author": "",
+  "author": "Chol Nhial <chol.nhial.chol@gmail.com> (https://chol.dev)",
   "license": "MIT",
   "peerDependencies": {
     "react": "^19.2.3",
