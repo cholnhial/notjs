@@ -9,6 +9,12 @@ It is intended to be used mainly on blogs where you want to demo language featur
 
 There are other platforms that do this, such as JDoodle and Replit. However, they have API limits which I wasn't happy with. I also wanted to use this as an opportunity to use Claude Code, and why not—it's fun reinventing the wheel sometimes.
 
+<p align="center">
+  <img src="docs/images/demo.png" alt="NotJS Demo Screenshot" width="700"/>
+</p>
+
+**[View Live Demo](https://notjs.chol.dev)**
+
 ## AI Disclosure & Security
 
 <p align="center">
@@ -22,8 +28,6 @@ I stepped in whenever I saw fit.
 I recommend hosting this on a dedicated server without any critical services, such as a [Nanode 1 GB](https://www.linode.com/pricing/), which costs $5 USD per month.  
 
 Yes, the logo is also AI generated. By ChatGPT.
-
-[DEMO](https://notjs.chol.dev)
 
 
 ## Architecture
