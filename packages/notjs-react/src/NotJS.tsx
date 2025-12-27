@@ -112,6 +112,7 @@ export interface NotJSProps {
   initialVersion?: string
   initialDarkMode?: boolean
   hideHeader?: boolean
+  editorWidthPercent?: number
 }
 
 export default function NotJS({
@@ -121,7 +122,8 @@ export default function NotJS({
   initialLanguage = 'java',
   initialVersion = '25',
   initialDarkMode = true,
-  hideHeader = false
+  hideHeader = false,
+  editorWidthPercent = 50
 }: NotJSProps) {
   // State
   const [code, setCode] = useState(initialCode || DEFAULT_CODE[initialLanguage] || DEFAULT_CODE.java)
@@ -138,7 +140,7 @@ export default function NotJS({
   const [isDarkMode, setIsDarkMode] = useState(initialDarkMode)
   const [codeCopied, setCodeCopied] = useState(false)
   const [consoleCopied, setConsoleCopied] = useState(false)
-  const [leftPanelWidth, setLeftPanelWidth] = useState(50) // percentage
+  const [leftPanelWidth, setLeftPanelWidth] = useState(editorWidthPercent) // percentage
   const [isResizing, setIsResizing] = useState(false)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')

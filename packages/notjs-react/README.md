@@ -58,6 +58,7 @@ function App() {
 | `initialDarkMode` | `boolean` | `true` | Enable dark mode by default |
 | `initialCode` | `string` | (language default) | Custom starting code |
 | `hideHeader` | `boolean` | `false` | Hide header for embedding |
+| `editorWidthPercent` | `number` | `50` | Initial editor width as percentage (20-80) |
 
 ## Features
 
@@ -261,6 +262,11 @@ The `NotJS` component accepts the following props:
 - Type: `boolean`
 - Default: `false`
 - Description: Hide the header (language selector, version, theme toggle) for embedded views
+
+#### `editorWidthPercent` (optional)
+- Type: `number`
+- Default: `50`
+- Description: Initial width of the editor panel as a percentage (constrained between 20-80). The console panel takes the remaining space. Users can still manually resize using the drag handle.
 
 ## Architecture
 
