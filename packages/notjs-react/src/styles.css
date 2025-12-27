@@ -37,32 +37,3 @@
 .dark .scrollbar-custom {
   scrollbar-color: rgb(75 85 99) rgb(31 41 55);
 }
-
-/* Ensure xterm styles override Tailwind's reset */
-.xterm {
-  font-family: courier-new, courier, monospace;
-  font-feature-settings: "liga" 0;
-  position: relative;
-  user-select: none;
-}
-
-.xterm .xterm-viewport {
-  background-color: #000 !important;
-  overflow-y: scroll;
-  cursor: default;
-  position: absolute;
-  right: 0;
-  left: 0;
-  top: 0;
-  bottom: 0;
-}
-
-.xterm .xterm-screen {
-  position: relative;
-}
-
-.xterm .xterm-screen canvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-}
