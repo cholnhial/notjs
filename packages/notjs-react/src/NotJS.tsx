@@ -663,7 +663,7 @@ export default function NotJS({
           {/* Code Panel */}
           <div
               className="flex flex-col bg-white dark:bg-neutral-900"
-              style={{ width: `${leftPanelWidth}%` }}
+              style={{ width: `${leftPanelWidth}%`, flexShrink: 0 }}
           >
             {/* Code Header */}
             <div className="flex items-center justify-between px-8 py-2 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
