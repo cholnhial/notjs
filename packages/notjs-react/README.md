@@ -144,6 +144,53 @@ int main() {
 />
 ```
 
+## Troubleshooting
+
+### CSS Styling Issues in Frameworks (Astro, Next.js, etc.)
+
+Although NotJS includes self-contained CSS, some frameworks may experience styling issues due to **CSS purging/tree-shaking**. The terminal styles (xterm.js) are added dynamically at runtime, so build tools may incorrectly remove them as "unused."
+
+#### Symptoms
+- Terminal appears with white/blank background
+- Terminal resizing doesn't work
+- Missing terminal UI elements
+
+#### Solution: Wrapper Component (Recommended)
+
+Create a wrapper component with explicit dimensions and **always import the CSS in the wrapper**:
+
+```tsx
+// components/NotJSWrapper.tsx
+import { NotJS } from 'notjs-react'
+import 'notjs-react/styles.css'  // Critical: Import styles here
+
+export function NotJSWrapper({ width = '100%', height = '600px', ...props }) {
+  return (
+    <div style={{ width, height }}>
+      <NotJS {...props} />
+    </div>
+  )
+}
+```
+
+Then use the wrapper in your MDX/pages:
+
+```mdx
+import { NotJSWrapper } from '@/components/NotJSWrapper'
+
+# My Blog Post
+
+<NotJSWrapper
+  width="100%"
+  height="500px"
+  apiBaseUrl="https://your-api.com/api"
+  websocketUrl="wss://your-api.com/terminal"
+  initialLanguage="java"
+/>
+```
+
+**Important**: The CSS import (`import 'notjs-react/styles.css'`) must be in the wrapper component file, not just in your page/MDX file. This ensures the styles are properly bundled and not purged by the build process.
+
 ## Development
 
 To develop the library locally:
