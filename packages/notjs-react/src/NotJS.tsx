@@ -602,7 +602,7 @@ export default function NotJS({
           scrollbar-color: #525252 transparent;
         }
       `}</style>
-      <div className="flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
+      <div className="notjs-root flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
         {/* Header */}
         {!hideHeader && (
           <div className="flex items-center justify-between px-8 py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
