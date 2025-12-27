@@ -15,7 +15,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/language")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:4321", "https://chol.dev"})
 public class LanguageController {
 
     private final ExecutorFactory executorFactory;
