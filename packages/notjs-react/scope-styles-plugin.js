@@ -11,9 +11,12 @@ export default function scopeStylesPlugin() {
         return;
       }
 
-      // Skip keyframes and other at-rules
+      // Skip keyframes but allow media queries
       if (rule.parent && rule.parent.type === 'atrule') {
-        return;
+        const parentName = rule.parent.name;
+        if (parentName === 'keyframes' || parentName === 'property' || parentName === 'supports') {
+          return;
+        }
       }
 
       // Scope all other rules to .notjs-root
@@ -33,6 +36,27 @@ export default function scopeStylesPlugin() {
             trimmed === '::backdrop'
           ) {
             return `.notjs-root${trimmed === '*' ? ' *' : ''}`;
+          }
+
+          // Handle .dark prefix - it should be on the same element as .notjs-root
+          // Transform .dark .something to .dark .notjs-root .something
+          if (trimmed.startsWith('.dark ')) {
+            return `.dark .notjs-root ${trimmed.substring(6)}`;
+          }
+
+          // Handle media query dark mode: @media(prefers-color-scheme:dark){.dark\:...}
+          // These should become .dark .notjs-root .utility
+          if (trimmed.startsWith('.dark\\:')) {
+            return `.dark .notjs-root .${trimmed.substring(7)}`;
+          }
+
+          // Handle hover and other pseudo-classes with dark
+          if (trimmed.includes('.dark\\:')) {
+            // Extract the base selector and transform it
+            const parts = trimmed.split('.dark\\:');
+            if (parts.length === 2) {
+              return `.dark .notjs-root .${parts[0]}${parts[1]}`;
+            }
           }
 
           // For other selectors, prefix with .notjs-root
