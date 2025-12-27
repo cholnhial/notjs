@@ -463,6 +463,11 @@ export default function NotJS({
     }
   }, [])
 
+  // Set initial editor width from prop
+  useEffect(() => {
+    setLeftPanelWidth(editorWidthPercent)
+  }, [])
+
   // Handle resizing panels
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
