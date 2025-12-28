@@ -1,9 +1,14 @@
 @import "tailwindcss";
 @import "@xterm/xterm/css/xterm.css";
 
-/* Minimal base styles scoped to NotJS components only */
+/* Base styles scoped to NotJS container only */
 .notjs-container {
   box-sizing: border-box;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
 }
 
 .notjs-container *,
