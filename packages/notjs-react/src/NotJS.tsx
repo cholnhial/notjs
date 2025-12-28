@@ -140,7 +140,7 @@ export default function NotJS({
   const [isDarkMode, setIsDarkMode] = useState(initialDarkMode)
   const [codeCopied, setCodeCopied] = useState(false)
   const [consoleCopied, setConsoleCopied] = useState(false)
-  const [leftPanelWidth, setLeftPanelWidth] = useState(editorWidthPercent) // percentage
+  const [leftPanelWidth, setLeftPanelWidth] = useState(50) // percentage
   const [isResizing, setIsResizing] = useState(false)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
