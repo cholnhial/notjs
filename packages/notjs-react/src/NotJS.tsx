@@ -140,7 +140,7 @@ export default function NotJS({
   const [isDarkMode, setIsDarkMode] = useState(initialDarkMode)
   const [codeCopied, setCodeCopied] = useState(false)
   const [consoleCopied, setConsoleCopied] = useState(false)
-  const [leftPanelWidth, setLeftPanelWidth] = useState(50) // percentage
+  const [leftPanelWidth, setLeftPanelWidth] = useState(editorWidthPercent) // percentage
   const [isResizing, setIsResizing] = useState(false)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -464,9 +464,9 @@ export default function NotJS({
   }, [])
 
   // Set initial editor width from prop
-/*  useEffect(() => {
+  useEffect(() => {
     setLeftPanelWidth(editorWidthPercent)
-  }, [])*/
+  }, [])
 
   // Handle resizing panels
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -663,6 +663,7 @@ export default function NotJS({
           {/* Code Panel */}
           <div
               className="flex flex-col bg-white dark:bg-neutral-900"
+              style={{ width: `${leftPanelWidth}%`, flexShrink: 0 }}
           >
             {/* Code Header */}
             <div className="flex items-center justify-between px-8 py-2 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
