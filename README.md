@@ -10,6 +10,8 @@ NotJS is a backend (Spring Boot) and React library for code playgrounds for comp
 ```bash
 npm install notjs-react
 ```
+See below on instructions on how to deploy the Spring Boot server.
+
 **NPM Package:** [notjs-react](https://www.npmjs.com/package/notjs-react)
 
 NotJS is intended to be used mainly on blogs where you want to demo language features. I now use it on my [blog](https://chol.dev) to demo new Java features.
