@@ -463,11 +463,6 @@ export default function NotJS({
     }
   }, [])
 
-  // Set initial editor width from prop
-  useEffect(() => {
-    setLeftPanelWidth(editorWidthPercent)
-  }, [])
-
   // Handle resizing panels
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -743,7 +738,7 @@ export default function NotJS({
 
           {/* Resize Handle */}
           <div
-              className={`w-1 bg-black/5 dark:bg-white/5 hover:bg-blue-500 cursor-col-resize transition ${
+              className={`w-1 shrink-0 bg-black/5 dark:bg-white/5 hover:bg-blue-500 cursor-col-resize transition ${
                   isResizing ? 'bg-blue-500' : ''
               }`}
               onMouseDown={handleMouseDown}
