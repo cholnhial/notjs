@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import { Terminal as XTerm } from '@xterm/xterm'
 import '@xterm/xterm/css/xterm.css'
-import * as Tooltip from '@radix-ui/react-tooltip'
+import { Tooltip } from 'react-tooltip'
+import 'react-tooltip/dist/react-tooltip.css'
 import {
   RotateCcw,
   Copy,
@@ -549,240 +550,199 @@ export default function NotJS({
   }
 
   return (
-    <Tooltip.Provider delayDuration={200}>
-      <style>{`
-        /* Custom scrollbar for xterm terminal */
-        .xterm-viewport::-webkit-scrollbar {
-          width: 12px;
-        }
+      <>
+      <div className="notjs-container">
+        <div className="flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
+          {/* Header */}
+          {!hideHeader && (
+              <div className="flex items-center justify-between px-8 py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
+                      NotJS
+                    </h1>
+                    <img
+                        src={notjsLogo}
+                        alt="NotJS Logo"
+                        className="h-10 object-contain rounded-xl"
+                    />
+                  </div>
 
-        .xterm-viewport::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-thumb {
-          background: #a3a3a3;
-          border-radius: 6px;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-
-        .xterm-viewport::-webkit-scrollbar-thumb:hover {
-          background: #8a8a8a;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-
-        /* Dark mode scrollbar */
-        .dark .xterm-viewport::-webkit-scrollbar-thumb {
-          background: #525252;
-          border-radius: 6px;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-
-        .dark .xterm-viewport::-webkit-scrollbar-thumb:hover {
-          background: #6b6b6b;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-        }
-
-        /* Firefox scrollbar */
-        .xterm-viewport {
-          scrollbar-width: thin;
-          scrollbar-color: #a3a3a3 transparent;
-        }
-
-        .dark .xterm-viewport {
-          scrollbar-color: #525252 transparent;
-        }
-      `}</style>
-      <div className="notjs-container flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
-        {/* Header */}
-        {!hideHeader && (
-          <div className="flex items-center justify-between px-8 py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-white">
-                NotJS
-              </h1>
-              <img
-                  src={notjsLogo}
-                  alt="NotJS Logo"
-                  className="h-10 object-contain rounded-xl"
-              />
-            </div>
-
-            <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
-            >
-              {languages.map(lang => (
-                  <option key={lang} value={lang}>
-                    {lang.toUpperCase()}
-                  </option>
-              ))}
-            </select>
-
-            {versions.length > 0 && (
-                <select
-                    value={selectedVersion || defaultVersion || ''}
-                    onChange={(e) => setSelectedVersion(e.target.value || null)}
-                    className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
-                >
-                  {versions.map(version => (
-                      <option key={version} value={version}>
-                        v{version} {version === defaultVersion ? '(default)' : ''}
-                      </option>
-                  ))}
-                </select>
-            )}
-          </div>
-
-          <button
-              onClick={toggleTheme}
-              className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
-          >
-            {isDarkMode ? (
-                <Sun className="w-5 h-5 text-yellow-500" />
-            ) : (
-                <Moon className="w-5 h-5 text-neutral-700" />
-            )}
-          </button>
-        </div>
-        )}
-
-        {/* Main Content */}
-        <div ref={containerRef} className="flex flex-1 overflow-hidden relative">
-          {/* Code Panel */}
-          <div
-              className="flex flex-col bg-white dark:bg-neutral-900"
-              style={{ width: `${leftPanelWidth}%`, flexShrink: 0 }}
-          >
-            {/* Code Header */}
-            <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 ${hideHeader ? '' : 'py-2'}`}>
-              <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
-                CODE
-              </h2>
-
-              <div className="flex items-center gap-2">
-                {/* Restart */}
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button
-                        onClick={handleRun}
-                        className="p-1.5 rounded-lg transition bg-orange-500/90 hover:bg-orange-500 text-white"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                        className="rounded-lg bg-neutral-900 dark:bg-neutral-800 px-3 py-1.5 text-xs text-white shadow-lg"
-                        sideOffset={5}
-                    >
-                      Restart program
-                      <Tooltip.Arrow className="fill-neutral-900 dark:fill-neutral-800" />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-
-                {/* Copy Code */}
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <button
-                        onClick={() => copyToClipboard(code, 'code')}
-                        className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
-                    >
-                      {codeCopied ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : (
-                          <Copy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
-                      )}
-                    </button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content
-                        className="rounded-lg bg-neutral-900 dark:bg-neutral-800 px-3 py-1.5 text-xs text-white shadow-lg"
-                        sideOffset={5}
-                    >
-                      Copy code
-                      <Tooltip.Arrow className="fill-neutral-900 dark:fill-neutral-800" />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-hidden rounded-b-2xl">
-              <Editor
-                  height="100%"
-                  language={selectedLanguage}
-                  value={code}
-                  onChange={(value) => setCode(value || '')}
-                  theme={isDarkMode ? 'vs-dark' : 'light'}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: 'on',
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                    tabSize: 2,
-                    wordWrap: 'on',
-                    padding: { top: 12, bottom: 12 }
-                  }}
-              />
-            </div>
-          </div>
-
-          {/* Resize Handle */}
-          <div
-              className={`w-1 shrink-0 bg-black/5 dark:bg-white/5 hover:bg-blue-500 cursor-col-resize transition ${
-                  isResizing ? 'bg-blue-500' : ''
-              }`}
-              onMouseDown={handleMouseDown}
-          />
-
-          {/* Console Panel */}
-          <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-neutral-950">
-            <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 shrink-0 ${hideHeader ? '' : 'py-2'}`}>
-              <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
-                CONSOLE
-              </h2>
-
-              <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                  <button
-                      onClick={copyConsoleOutput}
-                      className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                  <select
+                      value={selectedLanguage}
+                      onChange={(e) => setSelectedLanguage(e.target.value)}
+                      className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
                   >
-                    {consoleCopied ? (
+                    {languages.map(lang => (
+                        <option key={lang} value={lang}>
+                          {lang.toUpperCase()}
+                        </option>
+                    ))}
+                  </select>
+
+                  {versions.length > 0 && (
+                      <select
+                          value={selectedVersion || defaultVersion || ''}
+                          onChange={(e) => setSelectedVersion(e.target.value || null)}
+                          className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition"
+                      >
+                        {versions.map(version => (
+                            <option key={version} value={version}>
+                              v{version} {version === defaultVersion ? '(default)' : ''}
+                            </option>
+                        ))}
+                      </select>
+                  )}
+                </div>
+
+                <button
+                    onClick={toggleTheme}
+                    className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
+                >
+                  {isDarkMode ? (
+                      <Sun className="w-5 h-5 text-yellow-500" />
+                  ) : (
+                      <Moon className="w-5 h-5 text-neutral-700" />
+                  )}
+                </button>
+              </div>
+          )}
+
+          {/* Main Content */}
+          <div ref={containerRef} className="flex flex-1 overflow-hidden relative">
+            {/* Code Panel */}
+            <div
+                className="flex flex-col bg-white dark:bg-neutral-900"
+                style={{ width: `${leftPanelWidth}%`, flexShrink: 0 }}
+            >
+              {/* Code Header */}
+              <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 ${hideHeader ? '' : 'py-2'}`}>
+                <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
+                  CODE
+                </h2>
+
+                <div className="flex items-center gap-2">
+                  {/* Restart */}
+                  <button
+                      onClick={handleRun}
+                      className="p-1.5 rounded-lg transition bg-orange-500/90 hover:bg-orange-500 text-white"
+                      data-tooltip-id="restart-tooltip"
+                      data-tooltip-content="Restart program"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Copy Code */}
+                  <button
+                      onClick={() => copyToClipboard(code, 'code')}
+                      className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                      data-tooltip-id="copy-code-tooltip"
+                      data-tooltip-content="Copy code"
+                  >
+                    {codeCopied ? (
                         <Check className="w-3.5 h-3.5 text-emerald-600" />
                     ) : (
                         <Copy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
                     )}
                   </button>
-                </Tooltip.Trigger>
-                <Tooltip.Portal>
-                  <Tooltip.Content
-                      className="rounded-lg bg-neutral-900 dark:bg-neutral-800 px-3 py-1.5 text-xs text-white shadow-lg"
-                      sideOffset={5}
-                  >
-                    Copy output
-                    <Tooltip.Arrow className="fill-neutral-900 dark:fill-neutral-800" />
-                  </Tooltip.Content>
-                </Tooltip.Portal>
-              </Tooltip.Root>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-hidden rounded-b-2xl">
+                <Editor
+                    height="100%"
+                    language={selectedLanguage}
+                    value={code}
+                    onChange={(value) => setCode(value || '')}
+                    theme={isDarkMode ? 'vs-dark' : 'light'}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 2,
+                      wordWrap: 'on',
+                      padding: { top: 12, bottom: 12 }
+                    }}
+                />
+              </div>
             </div>
 
+            {/* Resize Handle */}
             <div
-                ref={terminalRef}
-                className="flex-1 overflow-hidden rounded-b-2xl bg-white dark:bg-neutral-950 p-3"
+                className={`w-1 shrink-0 bg-black/5 dark:bg-white/5 hover:bg-blue-500 cursor-col-resize transition ${
+                    isResizing ? 'bg-blue-500' : ''
+                }`}
+                onMouseDown={handleMouseDown}
             />
+
+            {/* Console Panel */}
+            <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-neutral-950">
+              <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 shrink-0 ${hideHeader ? '' : 'py-2'}`}>
+                <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
+                  CONSOLE
+                </h2>
+
+                <button
+                    onClick={copyConsoleOutput}
+                    className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition"
+                    data-tooltip-id="copy-output-tooltip"
+                    data-tooltip-content="Copy output"
+                >
+                  {consoleCopied ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                      <Copy className="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300" />
+                  )}
+                </button>
+              </div>
+
+              <div
+                  ref={terminalRef}
+                  className="flex-1 overflow-hidden rounded-b-2xl bg-white dark:bg-neutral-950 p-3"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </Tooltip.Provider>
+
+      <Tooltip
+        id="restart-tooltip"
+        className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
+        style={{
+          fontSize: '0.75rem',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          color: '#ffffff',
+          zIndex: 9999
+        }}
+        place="bottom"
+        offset={8}
+      />
+      <Tooltip
+        id="copy-code-tooltip"
+        className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
+        style={{
+          fontSize: '0.75rem',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          color: '#ffffff',
+          zIndex: 9999
+        }}
+        place="bottom"
+        offset={8}
+      />
+      <Tooltip
+        id="copy-output-tooltip"
+        className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
+        style={{
+          fontSize: '0.75rem',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          color: '#ffffff',
+          zIndex: 9999
+        }}
+        place="bottom"
+        offset={8}
+      />
+      </>
   )
 }
