@@ -1,23 +1,14 @@
-@import "tailwindcss";
+/* Import Theme Variables (Safe, doesn't render CSS) */
+@import "tailwindcss/theme.css";
+
+/* External Library CSS */
 @import "@xterm/xterm/css/xterm.css";
 
-/* Custom scrollbar styling for terminal and editor areas */
-.scrollbar-custom::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-.scrollbar-custom::-webkit-scrollbar-track {
-  background-color: rgb(243 244 246);
-}
-
-.dark .scrollbar-custom::-webkit-scrollbar-track {
-  background-color: rgb(31 41 55);
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background-color: rgb(156 163 175);
-  border-radius: 0.25rem;
+/* Scope ALL Tailwind Utilities to your container only */
+@layer utilities {
+  .notjs-container {
+    @import "tailwindcss/utilities.css";
+  }
 }
 
 .dark .scrollbar-custom::-webkit-scrollbar-thumb {
