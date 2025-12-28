@@ -1,6 +1,20 @@
 @import "tailwindcss";
 @import "@xterm/xterm/css/xterm.css";
 
+/* Minimal base styles scoped to NotJS components only */
+.notjs-container {
+  box-sizing: border-box;
+}
+
+.notjs-container *,
+.notjs-container *::before,
+.notjs-container *::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: currentColor;
+}
+
 /* Custom scrollbar styling for terminal and editor areas */
 .scrollbar-custom::-webkit-scrollbar {
   width: 12px;
