@@ -550,9 +550,8 @@ export default function NotJS({
   }
 
   return (
-      <>
       <div className="notjs-container">
-        <div className="flex flex-col h-screen w-screen bg-neutral-50 dark:bg-neutral-950">
+        <div className="flex flex-col h-full w-full bg-neutral-50 dark:bg-neutral-950">
           {/* Header */}
           {!hideHeader && (
               <div className="flex items-center justify-between px-8 py-3 bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-black/5 dark:border-white/5">
@@ -616,7 +615,7 @@ export default function NotJS({
                 style={{ width: `${leftPanelWidth}%`, flexShrink: 0 }}
             >
               {/* Code Header */}
-              <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 ${hideHeader ? '' : 'py-2'}`}>
+              <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 ${hideHeader ? 'py-2' : 'py-1'}`}>
                 <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
                   CODE
                 </h2>
@@ -679,7 +678,7 @@ export default function NotJS({
 
             {/* Console Panel */}
             <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-neutral-950">
-              <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 shrink-0 ${hideHeader ? '' : 'py-2'}`}>
+              <div className={`flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 shrink-0 ${hideHeader ? 'py-2' : 'py-1'}`}>
                 <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
                   CONSOLE
                 </h2>
@@ -705,44 +704,42 @@ export default function NotJS({
             </div>
           </div>
         </div>
+        <Tooltip
+            id="restart-tooltip"
+            className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              color: '#ffffff',
+              zIndex: 9999
+            }}
+            place="bottom"
+            offset={8}
+        />
+        <Tooltip
+            id="copy-code-tooltip"
+            className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              color: '#ffffff',
+              zIndex: 9999
+            }}
+            place="bottom"
+            offset={8}
+        />
+        <Tooltip
+            id="copy-output-tooltip"
+            className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
+            style={{
+              fontSize: '0.75rem',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              color: '#ffffff',
+              zIndex: 9999
+            }}
+            place="bottom"
+            offset={8}
+        />
       </div>
-
-      <Tooltip
-        id="restart-tooltip"
-        className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
-        style={{
-          fontSize: '0.75rem',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          color: '#ffffff',
-          zIndex: 9999
-        }}
-        place="bottom"
-        offset={8}
-      />
-      <Tooltip
-        id="copy-code-tooltip"
-        className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
-        style={{
-          fontSize: '0.75rem',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          color: '#ffffff',
-          zIndex: 9999
-        }}
-        place="bottom"
-        offset={8}
-      />
-      <Tooltip
-        id="copy-output-tooltip"
-        className="!rounded-lg !bg-slate-800/95 !backdrop-blur-sm !px-3 !py-2 !shadow-xl !border !border-slate-700/50"
-        style={{
-          fontSize: '0.75rem',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          color: '#ffffff',
-          zIndex: 9999
-        }}
-        place="bottom"
-        offset={8}
-      />
-      </>
   )
 }

@@ -6,6 +6,8 @@
   @import "tailwindcss/utilities.css";
   @import "@xterm/xterm/css/xterm.css";
 
+  flex: 1;
+
   font-family: var(--font-sans);
   /* Custom scrollbar for xterm terminal */
   .xterm-viewport::-webkit-scrollbar {

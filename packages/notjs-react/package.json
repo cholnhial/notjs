@@ -1,6 +1,6 @@
 {
   "name": "notjs-react",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "description": "A React component for interactive code execution for C,C++,Java, Go and Rust",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -9,3 +9,9 @@ html, body {
   height: 100%;
   width: 100%;
 }
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
