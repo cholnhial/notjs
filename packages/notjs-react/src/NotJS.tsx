@@ -661,7 +661,7 @@ export default function NotJS({
               style={{ width: `${leftPanelWidth}%`, flexShrink: 0 }}
           >
             {/* Code Header */}
-            <div className="flex items-center justify-between px-8 py-2 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
+            <div className="flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
               <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
                 CODE
               </h2>
@@ -745,8 +745,8 @@ export default function NotJS({
           />
 
           {/* Console Panel */}
-          <div className="flex-1 flex flex-col bg-white dark:bg-neutral-950">
-            <div className="flex items-center justify-between px-8 py-2 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5">
+          <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-neutral-950">
+            <div className="flex items-center justify-between px-8 bg-neutral-100/70 dark:bg-neutral-900 border-b border-black/5 dark:border-white/5 shrink-0">
               <h2 className="text-sm font-semibold tracking-wide text-neutral-600 dark:text-neutral-400">
                 CONSOLE
               </h2>
