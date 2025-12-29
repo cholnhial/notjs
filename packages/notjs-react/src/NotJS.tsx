@@ -209,7 +209,7 @@ export default function NotJS({
           versions: info.availableVersions,
           code: DEFAULT_CODE[selectedLanguage]
         })
-        setCode(DEFAULT_CODE[selectedLanguage])
+        setCode(initialCode || DEFAULT_CODE[selectedLanguage])
       })
       .catch(err => {
         console.error('Failed to fetch language info:', err)
@@ -269,7 +269,7 @@ export default function NotJS({
       // Send initial execution request
       const executionRequest: ExecutionRequest = {
         language: selectedLanguage,
-        code: languageInfo.code,
+        code: initialCode || languageInfo.code,
         version:  languageInfo.default || selectedVersion || null,
         arguments: []
       }
