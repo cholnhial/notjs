@@ -460,7 +460,10 @@ export default function NotJS({
   // Initialize dark mode
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.add('dark')
+      if (!hideHeader) {
+        document.documentElement.classList.add('dark')
+      }
+
     }
   }, [])
 
